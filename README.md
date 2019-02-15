@@ -6,13 +6,13 @@ Stop paying hundreds of dollars to Heroku and similar services! Host multiple Ra
 
 Designed to work with a [DigitalOcean](https://m.do.co/c/b6d95cc978e4) one-click Rails droplet.
 
-[⚠️ WARNING]: This is still a really rough prototype – I only created it to help myself deploy my rails projects. I wouldn't recommend using it in real production environments cuz it might be buggy (even though I use it for my production apps) Please contribute to improve the project!
+[⚠️ WARNING]: This is still a really rough prototype – I only created it to help myself deploy my rails projects. I wouldn't recommend using it in real production environments cuz it might be buggy and not very secure and all that (even though I use it for my production apps) Please contribute to improve the project!
 
 # Pre-requisites
 
 You need an already working Rails app, ready to deploy, and using the same Ruby version as your server. Also you need to be using a `postgresql` db and adapter.
 
-You need a target production Linux server you can `ssh` into, with the following stuff installed: `ruby`, `rvm`, `bundler`, `certbot`, `nginx`, `psql`, `git` (the recommended option is to spin up a [Rails DigitalOcean droplet](https://m.do.co/c/b6d95cc978e4) that has all this already installed). If you're using private Git repos, make sure your server has access to those via ssh (how-to in the following setup instructions).
+You need a target production Linux server you can `ssh` into, with a user with `nopasswd` sudo access, and with the following stuff installed: `ruby`, `rvm`, `bundler`, `certbot`, `nginx`, `psql`, `git` (the recommended option is to spin up a [Rails DigitalOcean droplet](https://m.do.co/c/b6d95cc978e4) that has all this already installed). If you're using private Git repos, make sure your server has access to those via ssh (how-to in the following setup instructions).
 
 ## Pre-requisites quick setup
 
@@ -49,6 +49,12 @@ Also check you're using a `postgresql` adapter in your `database.yml` (in produc
    `cat ~/.ssh/id_rsa.pub`
 
    - Go to GitHub.com > Settings > SSH and GPG keys > New SSH key. Add a human-readable title like "production server", paste in your public key you had just copied and hit "Add SSH key"
+
+4. You'll need to configure `nopasswd` sudo access for the user you'll use for deploying (Capistrano 3 doesn't allow password prompting). Assuming your user is the default `rails` in DigitalOcean, execute:
+   `sudo nano /etc/sudoers`
+   And add `rails ALL=(ALL) NOPASSWD:ALL` right before `#includedir /etc/sudoers.d`
+
+5. If you're getting weird LOCALE errors, you might need to stop accepting remote locale on the server by commenting out the `AcceptEnv LANG LC_*` line in the _remote_ (server) `/etc/ssh/sshd_config` file.
 
 # Usage
 

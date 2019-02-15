@@ -72,12 +72,28 @@ namespace :deploy do
 
       execute "mkdir -p /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config"
       execute "touch /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/secrets.yml"
-      secrets_content="production:\n  secret_key_base: $RAKE_SECRET"
-      execute "echo '#{secrets_content}' >> /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
+
+secrets_content = %x(
+base64 <<TEST
+production:
+  secret_key_base: $RAKE_SECRET
+TEST
+).delete("\n")
+      execute "echo '#{secrets_content}' | base64 -d | cat - >> /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/secrets.yml"
 
       execute "touch /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
-      database_config = "production:\n  adapter: postgresql\n  database: $APP_NAME_production\n  username: $APP_NAME\n  password: $RANDOM_DATABASE_PASSWORD"
-      execute "echo '#{database_config}' >> /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
+
+database_config = %x(
+base64 <<TEST
+production:
+  adapter: postgresql
+  host: localhost
+  database: $APP_NAME_production
+  username: $APP_NAME
+  password: $RANDOM_DATABASE_PASSWORD
+TEST
+).delete("\n")
+      execute "echo '#{database_config}' | base64 -d | cat - >> /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
 
       before 'deploy:restart', 'puma:start'
       invoke 'deploy'
@@ -120,5 +136,5 @@ end
 # kill -s SIGTERM pid   # Stop puma
 
 
-append :linked_files, "config/database.yml"
+append :linked_files, "config/database.yml", "config/secrets.yml"
 append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "vendor/bundle", "public/system", "public/uploads"
