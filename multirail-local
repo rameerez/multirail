@@ -6,15 +6,29 @@
 # where:
 #     domain website domain without subdomains (ex: example.com)
 
-RAILS_PROJECT_PATH="/Users/javi/GitHub/hubieras-muerto"
+RAILS_PROJECT_PATH="./"
 RAILS_PROJECT_RUBY_VERSION="2.4.0"
 
-while getopts ":d:a:u:g:n:" opt; do
+program_name=$0
+
+function usage {
+    echo "usage: $program_name -d domain -i ip_address -u user -g git_repo -n app_name [-f rails_project_folder]"
+    echo "  -d domain       Set the desired domain name (ex: project.com) to which the project should be deployed"
+    echo "  -i ip           IP address of the target production server (ex: 123.123.123.123)"
+    echo "  -u user         Linux user on the remote machine that will be used to deploy the code (ex: rails)"
+    echo "  -g git          Git repository SSH url on which the project is hosted (ex: git@github.com:user/project.git)"
+    echo "  -n name         Name of your app (ex: my-awesome-project)"
+    echo "  [-f folder]     Set the path where the Rails project is located. Defaults to current directory (ex: ~/git/my-project)"
+    echo "  -h              Display this help message"
+    exit 1
+}
+
+while getopts ":d:i:u:g:n:f:h" opt; do
   case $opt in
     d)
       DOMAIN=$OPTARG
       ;;
-    a)
+    i)
       IP_ADDRESS=$OPTARG
       ;;
     u)
@@ -25,6 +39,12 @@ while getopts ":d:a:u:g:n:" opt; do
       ;;
     n)
       APP_NAME=$OPTARG
+      ;;
+    f)
+      RAILS_PROJECT_PATH=$OPTARG
+      ;;
+    h)
+      usage
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -74,12 +94,10 @@ add_capistrano_to_project () {
  echo "$gemfile_lines_to_add"  >> $RAILS_PROJECT_PATH/Gemfile
 
  echo "Added required gems to Gemfile. Bundling..."
- 
- cd $RAILS_PROJECT_PATH
- bundle
+ ( cd $RAILS_PROJECT_PATH && bundle )
 
  echo "Initializing Capistrano..."
- cap install
+ ( cd $RAILS_PROJECT_PATH && cap install )
 }
 
 replace_capfile () {
@@ -112,17 +130,6 @@ commit_and_push_all_changes () {
   git push origin master
 }
 
-run_local_machine_actions () {
-  echo "local"
-#   verify_current_dir_is_a_rails_project
-#   add_capistrano_to_gemfile
-#   bundle
-#   run_capistrano_first_set_up
-#   replace_capfile
-#   replace_deploy_rb
-#   replace_nginx_conf
-}
-
 if [ ! -z "$DOMAIN" ] && [ ! -z "$IP_ADDRESS" ] && [ ! -z "$USER_REMOTE_LINUX" ] && [ ! -z "$GIT_REPO_URL_SSH" ] && [ ! -z "$APP_NAME" ]
 then
 
@@ -132,11 +139,11 @@ then
   # add_capistrano_to_project
   # replace_capfile
   # replace_deploy_rb
-  replace_nginx_conf
+  # replace_nginx_conf
   commit_and_push_all_changes
-  capistrano deploy production:initial
+  cap deploy production:initial
 
 else
-    echo "ERROR: You need to provide all required details to set up the project: domain name, remote IP address, remote Linux user, Git repo URL, app name."
+    echo "ERROR: You need to provide all required details to set up the project: domain name, remote IP address, remote Linux user, Git repo URL, app name. Use -h to display help."
     exit 1
 fi
