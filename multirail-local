@@ -1,0 +1,142 @@
+#!/bin/sh
+
+# Should be run as sudo
+
+# Usage: add-new-website.sh domain -- script to set up a new site with SSL cert
+# where:
+#     domain website domain without subdomains (ex: example.com)
+
+RAILS_PROJECT_PATH="/Users/javi/GitHub/hubieras-muerto"
+RAILS_PROJECT_RUBY_VERSION="2.4.0"
+
+while getopts ":d:a:u:g:n:" opt; do
+  case $opt in
+    d)
+      DOMAIN=$OPTARG
+      ;;
+    a)
+      IP_ADDRESS=$OPTARG
+      ;;
+    u)
+      USER_REMOTE_LINUX=$OPTARG
+      ;;
+    g)
+      GIT_REPO_URL_SSH=$OPTARG
+      ;;
+    n)
+      APP_NAME=$OPTARG
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+verify_current_dir_is_a_valid_rails_project () {  
+  if [ -e "$RAILS_PROJECT_PATH"/Gemfile ]; then
+    echo "Found Gemfile."
+  else
+    echo "ERROR: Couldn't find Gemfile. Is this folder a valid Rails project?"
+    exit 1
+  fi
+
+  if [ -d "$RAILS_PROJECT_PATH"/app ]; then
+    echo "Found app folder."
+  else
+    echo "ERROR: Couldn't find app folder. Is this folder a valid Rails project?"
+    exit 1
+  fi;
+
+  if [ -d "$RAILS_PROJECT_PATH"/config ]; then
+    echo "Found config folder."
+  else
+    echo "ERROR: Couldn't find config folder. Is this folder a valid Rails project?"
+    exit 1
+  fi
+
+  if [ -d "$RAILS_PROJECT_PATH"/.git ]; then
+    echo "Found local git repo."
+  else
+    echo "ERROR: Couldn't find local git repo. Is this folder a valid git repository?"
+    exit 1
+  fi;
+}
+
+add_capistrano_to_project () {
+ gemfile_lines_to_add=`cat templates/Gemfile`
+
+ # TODO: Use sed or something to verify this hasn't already been added if we run the command multiple times
+ echo "$gemfile_lines_to_add"  >> $RAILS_PROJECT_PATH/Gemfile
+
+ echo "Added required gems to Gemfile. Bundling..."
+ 
+ cd $RAILS_PROJECT_PATH
+ bundle
+
+ echo "Initializing Capistrano..."
+ cap install
+}
+
+replace_capfile () {
+  echo "Replacing Capfile..."
+  sed -e "s/\$RUBY_VERSION/$RAILS_PROJECT_RUBY_VERSION/" templates/Capfile > $RAILS_PROJECT_PATH/Capfile
+}
+
+replace_deploy_rb () {
+  echo "Replacing deploy.rb..."
+  sed -e "s/\$IP_ADDRESS/$IP_ADDRESS/" \
+      -e "s/\$GIT_REPO_URL_SSH/$GIT_REPO_URL_SSH/" \
+      -e "s/\$APP_NAME/$APP_NAME/" \
+      -e "s/\$USER_REMOTE_LINUX/$USER_REMOTE_LINUX/" \
+      templates/deploy.rb \
+      > $RAILS_PROJECT_PATH/config/deploy.rb
+}
+
+replace_nginx_conf () {
+  echo "Replacing nginx.conf..."
+  sed -e "s/\$APP_NAME/$APP_NAME/g" \
+      -e "s/\$USER_REMOTE_LINUX/$USER_REMOTE_LINUX/g" \
+      -e "s/\$DOMAIN/$DOMAIN/g" \
+      templates/nginx.conf \
+      > $RAILS_PROJECT_PATH/config/nginx.conf
+}
+
+commit_and_push_all_changes () {
+  git add .
+  git commit -m "[Multirail task] Add and configure Capistrano for deployment"
+  git push origin master
+}
+
+run_local_machine_actions () {
+  echo "local"
+#   verify_current_dir_is_a_rails_project
+#   add_capistrano_to_gemfile
+#   bundle
+#   run_capistrano_first_set_up
+#   replace_capfile
+#   replace_deploy_rb
+#   replace_nginx_conf
+}
+
+if [ ! -z "$DOMAIN" ] && [ ! -z "$IP_ADDRESS" ] && [ ! -z "$USER_REMOTE_LINUX" ] && [ ! -z "$GIT_REPO_URL_SSH" ] && [ ! -z "$APP_NAME" ]
+then
+
+  echo "Alright! I'm going to set this Rails project named $APP_NAME to run on $DOMAIN, located at $IP_ADDRESS. The remote machine Linux user that will be used to deploy the code is $USER_REMOTE_LINUX, and I'll fetch the code from Git: $GIT_REPO_URL_SSH" >&2
+
+  verify_current_dir_is_a_valid_rails_project
+  # add_capistrano_to_project
+  # replace_capfile
+  # replace_deploy_rb
+  replace_nginx_conf
+  commit_and_push_all_changes
+  capistrano deploy production:initial
+
+else
+    echo "ERROR: You need to provide all required details to set up the project: domain name, remote IP address, remote Linux user, Git repo URL, app name."
+    exit 1
+fi

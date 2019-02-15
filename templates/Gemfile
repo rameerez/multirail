@@ -1,0 +1,8 @@
+
+
+# Multirails - gems to deploy to Linux production server
+gem 'capistrano', '~> 3.11',        :group => :development
+gem 'capistrano-rails', '~> 1.4',   :group => :development
+gem 'capistrano3-puma',             :group => :development, require: false
+gem 'capistrano-bundler',           :group => :development, require: false
+gem 'capistrano-rvm',               :group => :development

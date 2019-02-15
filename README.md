@@ -1,6 +1,6 @@
 # 🚝 multirail
 
-Set up and configure multiple Rails app in the same DigitalOcean droplet / Linux server using nginx, Puma and Capistrano.
+Set up and configure multiple Rails app in the same DigitalOcean droplet / Linux (Ubuntu) server using nginx, Puma and Capistrano.
 
 Stop paying hundreds of dollars to Heroku and similar services! Host multiple Rails apps in a single Linux server with ease and minimal config. All this with a free, ready-to-use SSL certificate! Multirail removes the frustration out of the process.
 
@@ -8,9 +8,9 @@ Designed to work with a [DigitalOcean](https://m.do.co/c/b6d95cc978e4) one-click
 
 # Pre-requisites
 
-To have an already working Rails app, ready to deploy, and using the same Ruby version as your server.
+You need an already working Rails app, ready to deploy, and using the same Ruby version as your server.
 
-To have a production target Linux server you can `ssh` into, with the following stuff installed: `ruby`, `rvm`, `bundler`, `certbot`, `nginx`, `psql`, `git` (the recommended option is to spin up a [Rails DigitalOcean droplet](https://m.do.co/c/b6d95cc978e4) that has all this already installed). If you're using private Git repos, make sure your server has access to those via ssh (how-to in the following setup instructions).
+You need a target production Linux server you can `ssh` into, with the following stuff installed: `ruby`, `rvm`, `bundler`, `certbot`, `nginx`, `psql`, `git` (the recommended option is to spin up a [Rails DigitalOcean droplet](https://m.do.co/c/b6d95cc978e4) that has all this already installed). If you're using private Git repos, make sure your server has access to those via ssh (how-to in the following setup instructions).
 
 ## Pre-requisites quick setup
 
@@ -51,11 +51,11 @@ Check the `Gemfile` on your Rails project and either change the Ruby version to 
 1. On your local development machine, `cd` to the Rails project you want to deploy and:
 
    - `git clone https://github.com/rameerez/multirail.git && cd multirail`
-   - todo: local script usage
+   - `sudo multirail`
 
 2. On your production server, ssh in with the `rails` user (or whichever user you're using to deploy) and:
 
    - `git clone https://github.com/rameerez/multirail.git && cd multirail`
    - todo: remote script usage
 
-3. Import your PostgreSQL data (if any) and you're ready to go! ✨ Now go to your domain and verify everything is working flawlessly and with a shiny SSL cert!
+3. Import your PostgreSQL data (if any) and you're ready to go! ✨ Now go to your domain and verify everything is working flawlessly and with a shiny 🔒 SSL cert!
