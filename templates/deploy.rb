@@ -103,7 +103,7 @@ TEST
   desc 'Link nginx configuration'
   task :symlink_nginx_conf do
     on roles(:app) do
-      execute "sudo rm /etc/nginx/sites-enabled/default"
+      # execute "sudo rm /etc/nginx/sites-enabled/default"
       execute "sudo ln -nfs /home/$USER_REMOTE_LINUX/apps/$APP_NAME/current/config/nginx.conf /etc/nginx/sites-enabled/$APP_NAME"
       execute "sudo service nginx start"
     end
@@ -111,7 +111,7 @@ TEST
   
   desc 'Create SSL cert'
   task :create_ssl_cert do
-    on roles(:app) do
+    on roles(:app), wait: 15 do
       execute "[ ! -f /etc/letsencrypt/live/$DOMAIN ] && sudo certbot --nginx --agree-tos --redirect --hsts --uir -n -m admin@$DOMAIN -d $DOMAIN && sudo service nginx restart"
     end
   end

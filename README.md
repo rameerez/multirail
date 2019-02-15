@@ -58,14 +58,26 @@ Also check you're using a `postgresql` adapter in your `database.yml` (in produc
 
 # Usage
 
-1. On your local development machine, `cd` to the Rails project you want to deploy and:
+On your local development machine clone Multirail to the location you desire with `git clone https://github.com/rameerez/multirail.git && cd multirail`
 
-   - `git clone https://github.com/rameerez/multirail.git && cd multirail`
-   - `sudo multirail`
+Then just execute (substitute with your own values!):
 
-2. On your production server, ssh in with the `rails` user (or whichever user you're using to deploy) and:
+```
+./multirail -d example.com -i 123.123.123.123 -u rails -g git@github.com/rameeerez/my-app.git -n my-app -f ~/git/my-app -v 2.4.0
+```
 
-   - `git clone https://github.com/rameerez/multirail.git && cd multirail`
-   - todo: remote script usage
+Where:
 
-3. Import your PostgreSQL data (if any) and you're ready to go! ✨ Now go to your domain and verify everything is working flawlessly and with a shiny 🔒 SSL cert!
+- `example.com` is the domain you wish to deploy your app to.
+- `123.123.123.123` the IP address of your server.
+- `rails` is the Linux user in your server that will be used to deploy.
+- `git@github.com/rameeerez/my-app.git` is the Git SSH URL of your repository from which Capistrano will pull the code.
+- `my-app` is just the name of your app (best to name it equal to your repo).
+- `~/git/my-app` is the path on your local machine where the Rails project is.
+- `2.4.0` is the Ruby version both your project and your server are using.
+
+For more info, execute `./multirail -h`
+
+---
+
+You're done! Import your PostgreSQL data (if any) and you're ready to go! ✨ Now go to your domain and verify everything is working flawlessly and with a shiny 🔒 SSL cert!
