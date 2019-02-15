@@ -9,21 +9,24 @@
 RAILS_PROJECT_PATH="./"
 RAILS_PROJECT_RUBY_VERSION="2.4.0"
 
+RAKE_SECRET="none"
+
 program_name=$0
 
 function usage {
-    echo "usage: $program_name -d domain -i ip_address -u user -g git_repo -n app_name [-f rails_project_folder]"
+    echo "usage: $program_name -d domain -i ip_address -u user -g git_repo -n app_name [-f rails_project_folder] [-v ruby_version]"
     echo "  -d domain       Set the desired domain name (ex: project.com) to which the project should be deployed"
     echo "  -i ip           IP address of the target production server (ex: 123.123.123.123)"
     echo "  -u user         Linux user on the remote machine that will be used to deploy the code (ex: rails)"
     echo "  -g git          Git repository SSH url on which the project is hosted (ex: git@github.com:user/project.git)"
     echo "  -n name         Name of your app (ex: my-awesome-project)"
     echo "  [-f folder]     Set the path where the Rails project is located. Defaults to current directory (ex: ~/git/my-project)"
+    echo "  [-v version]    Set the target Ruby version for the project. Defaults to 2.4.0 (ex: 2.5.1)"
     echo "  -h              Display this help message"
     exit 1
 }
 
-while getopts ":d:i:u:g:n:f:h" opt; do
+while getopts ":d:i:u:g:n:f:v:h" opt; do
   case $opt in
     d)
       DOMAIN=$OPTARG
@@ -42,6 +45,9 @@ while getopts ":d:i:u:g:n:f:h" opt; do
       ;;
     f)
       RAILS_PROJECT_PATH=$OPTARG
+      ;;
+    v)
+      RAILS_PROJECT_RUBY_VERSION=$OPTARG
       ;;
     h)
       usage
@@ -97,7 +103,7 @@ add_capistrano_to_project () {
  ( cd $RAILS_PROJECT_PATH && bundle )
 
  echo "Initializing Capistrano..."
- ( cd $RAILS_PROJECT_PATH && cap install )
+ ( cd $RAILS_PROJECT_PATH && cap install STAGES=production )
 }
 
 replace_capfile () {
@@ -106,11 +112,16 @@ replace_capfile () {
 }
 
 replace_deploy_rb () {
+  RANDOM_DATABASE_PASSWORD=`< /dev/urandom LC_CTYPE=C tr -dc _A-Z-a-z-0-9 | head -c${1:-32};echo;`
+  RAKE_SECRET="$(cd $RAILS_PROJECT_PATH && rake secret)"
   echo "Replacing deploy.rb..."
-  sed -e "s/\$IP_ADDRESS/$IP_ADDRESS/" \
-      -e "s/\$GIT_REPO_URL_SSH/$GIT_REPO_URL_SSH/" \
-      -e "s/\$APP_NAME/$APP_NAME/" \
-      -e "s/\$USER_REMOTE_LINUX/$USER_REMOTE_LINUX/" \
+  sed -e "s/\$IP_ADDRESS/$IP_ADDRESS/g" \
+      -e "s~\$GIT_REPO_URL_SSH~$GIT_REPO_URL_SSH~" \
+      -e "s/\$APP_NAME/$APP_NAME/g" \
+      -e "s/\$USER_REMOTE_LINUX/$USER_REMOTE_LINUX/g" \
+      -e "s/\$RANDOM_DATABASE_PASSWORD/$RANDOM_DATABASE_PASSWORD/g" \
+      -e "s/\$RAKE_SECRET/$RAKE_SECRET/g" \
+      -e "s/\$DOMAIN/$DOMAIN/g" \
       templates/deploy.rb \
       > $RAILS_PROJECT_PATH/config/deploy.rb
 }
@@ -125,9 +136,13 @@ replace_nginx_conf () {
 }
 
 commit_and_push_all_changes () {
-  git add .
-  git commit -m "[Multirail task] Add and configure Capistrano for deployment"
-  git push origin master
+  ( cd $RAILS_PROJECT_PATH && git add . )
+  ( cd $RAILS_PROJECT_PATH && git commit -m "[Multirail task] Add and configure Capistrano for deployment" )
+  ( cd $RAILS_PROJECT_PATH && git push origin master )
+}
+
+initial_capistrano_deployment () {
+  ( cd $RAILS_PROJECT_PATH && cap production deploy:initial )
 }
 
 if [ ! -z "$DOMAIN" ] && [ ! -z "$IP_ADDRESS" ] && [ ! -z "$USER_REMOTE_LINUX" ] && [ ! -z "$GIT_REPO_URL_SSH" ] && [ ! -z "$APP_NAME" ]
@@ -136,12 +151,12 @@ then
   echo "Alright! I'm going to set this Rails project named $APP_NAME to run on $DOMAIN, located at $IP_ADDRESS. The remote machine Linux user that will be used to deploy the code is $USER_REMOTE_LINUX, and I'll fetch the code from Git: $GIT_REPO_URL_SSH" >&2
 
   verify_current_dir_is_a_valid_rails_project
-  # add_capistrano_to_project
-  # replace_capfile
-  # replace_deploy_rb
-  # replace_nginx_conf
+  add_capistrano_to_project
+  replace_capfile
+  replace_deploy_rb
+  replace_nginx_conf
   commit_and_push_all_changes
-  cap deploy production:initial
+  initial_capistrano_deployment  
 
 else
     echo "ERROR: You need to provide all required details to set up the project: domain name, remote IP address, remote Linux user, Git repo URL, app name. Use -h to display help."

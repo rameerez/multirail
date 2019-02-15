@@ -65,8 +65,38 @@ namespace :deploy do
   desc 'Initial Deploy'
   task :initial do
     on roles(:app) do
+      execute 'sudo -u postgres bash -c "psql -c \"CREATE USER $APP_NAME WITH PASSWORD \'$RANDOM_DATABASE_PASSWORD\';\""'
+      execute "sudo -u postgres psql -c 'create database $APP_NAME_production;'"
+      execute "sudo -u postgres psql -c 'grant all privileges on database $APP_NAME_production to $APP_NAME;'"
+      execute "sudo -u postgres psql -c 'ALTER DATABASE $APP_NAME_production OWNER TO $APP_NAME;'"
+
+      execute "mkdir -p /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config"
+      execute "touch /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/secrets.yml"
+      secrets_content="production:\n  secret_key_base: $RAKE_SECRET"
+      execute "echo '#{secrets_content}' >> /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
+
+      execute "touch /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
+      database_config = "production:\n  adapter: postgresql\n  database: $APP_NAME_production\n  username: $APP_NAME\n  password: $RANDOM_DATABASE_PASSWORD"
+      execute "echo '#{database_config}' >> /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
+
       before 'deploy:restart', 'puma:start'
       invoke 'deploy'
+    end
+  end
+
+  desc 'Link nginx configuration'
+  task :symlink_nginx_conf do
+    on roles(:app) do
+      execute "sudo rm /etc/nginx/sites-enabled/default"
+      execute "sudo ln -nfs /home/$USER_REMOTE_LINUX/apps/$APP_NAME/current/config/nginx.conf /etc/nginx/sites-enabled/$APP_NAME"
+      execute "sudo service nginx start"
+    end
+  end
+  
+  desc 'Create SSL cert'
+  task :create_ssl_cert do
+    on roles(:app) do
+      execute "[ ! -f /etc/letsencrypt/live/$DOMAIN ] && sudo certbot --nginx --agree-tos --redirect --hsts --uir -n -m admin@$DOMAIN -d $DOMAIN && sudo service nginx restart"
     end
   end
 
@@ -80,6 +110,8 @@ namespace :deploy do
   before :starting,     :check_revision
   after  :finishing,    :compile_assets
   after  :finishing,    :cleanup
+  after  :finishing,    :symlink_nginx_conf
+  after  :finishing,    :create_ssl_cert
   after  :finishing,    :restart
 end
 
@@ -88,6 +120,5 @@ end
 # kill -s SIGTERM pid   # Stop puma
 
 
-
-append :linked_files, "config/database.yml", "config/secrets.yml"
+append :linked_files, "config/database.yml"
 append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "vendor/bundle", "public/system", "public/uploads"

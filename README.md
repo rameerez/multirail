@@ -6,9 +6,11 @@ Stop paying hundreds of dollars to Heroku and similar services! Host multiple Ra
 
 Designed to work with a [DigitalOcean](https://m.do.co/c/b6d95cc978e4) one-click Rails droplet.
 
+[⚠️ WARNING]: This is still a really rough prototype – I only created it to help myself deploy my rails projects. I wouldn't recommend using it in real production environments cuz it might be buggy (even though I use it for my production apps) Please contribute to improve the project!
+
 # Pre-requisites
 
-You need an already working Rails app, ready to deploy, and using the same Ruby version as your server.
+You need an already working Rails app, ready to deploy, and using the same Ruby version as your server. Also you need to be using a `postgresql` db and adapter.
 
 You need a target production Linux server you can `ssh` into, with the following stuff installed: `ruby`, `rvm`, `bundler`, `certbot`, `nginx`, `psql`, `git` (the recommended option is to spin up a [Rails DigitalOcean droplet](https://m.do.co/c/b6d95cc978e4) that has all this already installed). If you're using private Git repos, make sure your server has access to those via ssh (how-to in the following setup instructions).
 
@@ -25,6 +27,8 @@ From now on, use your `rails` Linux user, not `root`.
 2. Check your Rails project uses the exact same Ruby version as your server
 
 Check the `Gemfile` on your Rails project and either change the Ruby version to the one on the server and verify everything still works or install that exact Ruby version on the server with `rvm install x.y.z` and then tell the server to use that version by default by running `rvm use system x.y.z` or `rvm x.y.z --default`
+
+Also check you're using a `postgresql` adapter in your `database.yml` (in production, at least)
 
 3. If you're using private Git repos: Make your server talk with your Git server via `ssh`. We'll assume you're using private GitHub repos:
 
