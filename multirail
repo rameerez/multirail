@@ -1,11 +1,5 @@
 #!/bin/sh
 
-# Should be run as sudo
-
-# Usage: add-new-website.sh domain -- script to set up a new site with SSL cert
-# where:
-#     domain website domain without subdomains (ex: example.com)
-
 RAILS_PROJECT_PATH="./"
 RAILS_PROJECT_RUBY_VERSION="2.4.0"
 
