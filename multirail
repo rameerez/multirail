@@ -1,5 +1,13 @@
 #!/bin/sh
 
+# To completely remove a deployed site:
+# On psql:
+#   DROP DATABASE whatever_production;
+#   ROP USER whatever;
+# On shell
+#   sudo rm /etc/nginx/sites-enabled/whatever
+#   sudo certbot delete
+
 RAILS_PROJECT_PATH="./"
 RAILS_PROJECT_RUBY_VERSION="2.4.0"
 
