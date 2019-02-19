@@ -1,9 +1,13 @@
 #!/bin/sh
 
 # To completely remove a deployed site:
+# sudo su - postgres
+# psql
 # On psql:
 #   DROP DATABASE whatever_production;
-#   ROP USER whatever;
+#   DROP USER whatever;
+# \l and \du to list databases and users
+# then \q to quit to bash
 # On shell
 #   sudo rm /etc/nginx/sites-enabled/whatever
 #   sudo certbot delete

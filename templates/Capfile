@@ -4,7 +4,12 @@ require "capistrano/setup"
 # Include default deployment tasks
 require "capistrano/deploy"
 
-require 'capistrano/rails'
+# Importing 'capistrano/rails' fails if you're using an API-only Rails project that doesn't have Sprockets set up
+# causing an "Don't know how to build task 'assets:precompile'" error.
+# 'capistrano/rails' actually just imports 'capistrano/rails/migrations' and 'capistrano/rails/assets'
+# source: https://stackoverflow.com/questions/41052204/deploy-raise-error-dont-know-how-to-build-task-assetsprecompile-capistran
+require 'capistrano/rails/migrations'
+
 require "capistrano/bundler"
 require 'capistrano/rvm'
 require 'capistrano/puma'

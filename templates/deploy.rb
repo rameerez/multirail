@@ -38,6 +38,26 @@ set :puma_init_active_record, false  # Change to true if using ActiveRecord
 # set :linked_files, %w{config/database.yml}
 # set :linked_dirs,  %w{bin log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system}
 
+# Allow to run `rails c` by running `cap [staging] rails:console` 
+# or `cap [staging] rails:console 1` if you have more than 1 server in your server list
+# Source: https://stackoverflow.com/questions/9569070/how-to-enter-rails-console-on-production-via-capistrano
+
+# namespace :rails do
+#   desc 'Open a rails console `cap [staging] rails:console [server_index default: 0]`'
+#   task :console do    
+#     server = roles(:app)[ARGV[2].to_i]
+
+#     puts "Opening a console on: #{server.hostname}...."
+
+#     cmd = "ssh #{server.user}@#{server.hostname} -t 'cd #{fetch(:deploy_to)}/current && RAILS_ENV=#{fetch(:rails_env)} bundle exec rails console'"
+
+#     puts cmd
+
+#     exec cmd
+#   end
+# end
+
+
 namespace :puma do
   desc 'Create Directories for Puma Pids and Socket'
   task :make_dirs do
@@ -65,6 +85,7 @@ namespace :deploy do
   desc 'Initial Deploy'
   task :initial do
     on roles(:app) do
+      # TODO: figure out how to escape $APP_NAME using double quotes because this breaks if $APP_NAME contains hyphens like my-app 
       execute 'sudo -u postgres bash -c "psql -c \"CREATE USER $APP_NAME WITH PASSWORD \'$RANDOM_DATABASE_PASSWORD\';\""'
       execute "sudo -u postgres psql -c 'create database $APP_NAME_production;'"
       execute "sudo -u postgres psql -c 'grant all privileges on database $APP_NAME_production to $APP_NAME;'"
@@ -125,7 +146,7 @@ TEST
   end
 
   before :starting,     :check_revision
-  after  :finishing,    :compile_assets
+  # after  :finishing,    :compile_assets
   after  :finishing,    :cleanup
   after  :finishing,    :symlink_nginx_conf
   after  :finishing,    :create_ssl_cert
