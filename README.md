@@ -56,6 +56,8 @@ Also check you're using a `postgresql` adapter in your `database.yml` (in produc
 
 5. If you're getting weird LOCALE errors, you might need to stop accepting remote locale on the server by commenting out the `AcceptEnv LANG LC_*` line in the _remote_ (server) `/etc/ssh/sshd_config` file.
 
+6. Check `bundler` and the required gems are installed on the Linux server. Run `gem` to check. Run `gem list bundler` to check you have version >2 installed. If not, run `gem install bundler`.
+
 # Usage
 
 On your local development machine clone Multirail to the location you desire with `git clone https://github.com/rameerez/multirail.git && cd multirail`
@@ -72,7 +74,7 @@ Where:
 - `123.123.123.123` the IP address of your server.
 - `rails` is the Linux user in your server that will be used to deploy.
 - `git@github.com:rameerez/my-app.git` is the Git SSH URL of your repository from which Capistrano will pull the code.
-- `my-app` is just the name of your app (best to name it equal to your repo).
+- `my-app` is just the name of your app (best to name it equal to your repo). [KNOWN BUG: due to a bug, please don't use any characters or spaces in the name. Just letters. Or else Postgresql won't create the user]
 - `~/git/my-app` is the path on your local machine where the Rails project is.
 - `2.4.0` is the Ruby version both your project and your server are using.
 
