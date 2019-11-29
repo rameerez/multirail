@@ -63,7 +63,7 @@ On your local development machine clone Multirail to the location you desire wit
 Then just execute (substitute with your own values!):
 
 ```
-./multirail -d example.com -i 123.123.123.123 -u rails -g git@github.com/rameeerez/my-app.git -n my-app -f ~/git/my-app -v 2.4.0
+./multirail -d example.com -i 123.123.123.123 -u rails -g git@github.com:rameerez/my-app.git -n my-app -f ~/git/my-app -v 2.4.0
 ```
 
 Where:
@@ -71,7 +71,7 @@ Where:
 - `example.com` is the domain you wish to deploy your app to.
 - `123.123.123.123` the IP address of your server.
 - `rails` is the Linux user in your server that will be used to deploy.
-- `git@github.com/rameeerez/my-app.git` is the Git SSH URL of your repository from which Capistrano will pull the code.
+- `git@github.com:rameerez/my-app.git` is the Git SSH URL of your repository from which Capistrano will pull the code.
 - `my-app` is just the name of your app (best to name it equal to your repo).
 - `~/git/my-app` is the path on your local machine where the Rails project is.
 - `2.4.0` is the Ruby version both your project and your server are using.
@@ -82,17 +82,18 @@ For more info, execute `./multirail -h`
 
 You're done! Import your PostgreSQL data (if any) and you're ready to go! ✨ Now go to your domain and verify everything is working flawlessly and with a shiny 🔒 SSL cert!
 
-
 # Troubleshooting
 
 If one of the servers is not working:
 
 `ssh` into the server and check that `puma` is running
+
 ```
 ps aux | grep puma
 ```
 
 Then you should see at least one process that's running on an unix sock. It should be the same sock as configured in the `deploy.rb` script. Example output:
+
 ```
 rails      848  0.0  6.5 803396 66228 ?        Ssl  May03   9:30 puma 3.12.0 (tcp://0.0.0.0:3000) [example]
 rails     4683  0.0 13.0 864652 131388 ?       Sl   May14   5:13 puma 3.12.1 (unix:///home/rails/apps/app1/shared/tmp/sockets/app1-puma.sock)
@@ -101,6 +102,7 @@ rails    25525  0.0  0.1  11464  1152 pts/0    S+   08:58   0:00 grep --color=au
 ```
 
 If the required app is not running, check if it has a valid pid (or any at all). `cd` to the app dir (`cd ~/apps/APPNAME`) and `ls` the `pids` folder in search of the `puma.pid`:
+
 ```
 ls shared/tmp/pids/
 ```
@@ -108,12 +110,21 @@ ls shared/tmp/pids/
 If `puma.pid` is not in the output, the puma server is down.
 
 From the local dev environment, cd to the rails project and spin it up with:
+
 ```
 bundle exec cap production deploy:restart
 ```
 
 This should create the `puma.pid` and `ps aux | grep puma` should now output our process. We may also try
+
 ```
 bundle exec cap production puma:restart
 ```
+
 if that's not enough.
+
+# To-do
+
+- [ ] Don't create DB role and database if already created (from a failed installation, or from trying to redeploy)
+- [ ] Revert unsuccessfull installations
+- [ ] Completely remove an app from the server
