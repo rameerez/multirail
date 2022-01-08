@@ -144,7 +144,7 @@ replace_nginx_conf () {
 commit_and_push_all_changes () {
   ( cd $RAILS_PROJECT_PATH && git add . )
   ( cd $RAILS_PROJECT_PATH && git commit -m "[Multirail task] Add and configure Capistrano for deployment" )
-  ( cd $RAILS_PROJECT_PATH && git push origin master )
+  ( cd $RAILS_PROJECT_PATH && git push origin main )
 }
 
 initial_capistrano_deployment () {
