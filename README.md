@@ -130,3 +130,20 @@ if that's not enough.
 - [ ] Don't create DB role and database if already created (from a failed installation, or from trying to redeploy)
 - [ ] Revert unsuccessfull installations
 - [ ] Completely remove an app from the server
+
+
+# How to uninstall sites
+
+ 1. Delete the app `/apps/THE_SITE`
+ 2. Delete Postgres databases
+      ```
+      sudo su - postgres
+      psql
+      \l
+      DROP DATABASE THE_DATABASE;
+      ```
+ 3. See what's on nginx config `ls -lah /etc/nginx/sites-enabled/`
+ 4. Remove the sites that are no longer present `rm /etc/nginx/sites-enabled/THE_SITE`
+ 5. Restart nginx `sudo service nginx restart`
+ 6. See what's on Letsencrypt `sudo ls  /etc/letsencrypt/live`
+ 7. Remove the site from Letsencrypt `sudo rm -rf  /etc/letsencrypt/live/THE_SITE`
