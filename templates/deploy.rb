@@ -1,5 +1,5 @@
 # config valid for current version and patch releases of Capistrano
-lock "~> 3.16.0"
+lock "~> 3.17.1"
 
 # Change these
 server '$IP_ADDRESS', roles: [:web, :app, :db], primary: true

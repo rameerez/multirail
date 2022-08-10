@@ -118,7 +118,7 @@ replace_capfile () {
 }
 
 replace_deploy_rb () {
-  RANDOM_DATABASE_PASSWORD=`< /dev/urandom LC_CTYPE=C tr -dc _A-Z-a-z-0-9 | head -c${1:-32};echo;`
+  RANDOM_DATABASE_PASSWORD=`openssl rand -hex 32;echo;`
   RAKE_SECRET="$(cd $RAILS_PROJECT_PATH && rake secret)"
   echo "Replacing deploy.rb..."
   sed -e "s/\$IP_ADDRESS/$IP_ADDRESS/g" \

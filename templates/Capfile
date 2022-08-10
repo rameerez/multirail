@@ -8,16 +8,33 @@ require "capistrano/deploy"
 # causing an "Don't know how to build task 'assets:precompile'" error.
 # 'capistrano/rails' actually just imports 'capistrano/rails/migrations' and 'capistrano/rails/assets'
 # source: https://stackoverflow.com/questions/41052204/deploy-raise-error-dont-know-how-to-build-task-assetsprecompile-capistran
-require 'capistrano/rails/migrations'
+#  Uncomment for API projects
+# require 'capistrano/rails/migrations'
+# Comment out for API projects
+require 'capistrano/rails'
 
 require "capistrano/bundler"
 require 'capistrano/rvm'
 require 'capistrano/puma'
 
+# Fix for Capistrano >= 3.15.0 & Puma >= 5.0 
+# Puma 5 stopped supporting daemonized puma in favor of SystemD
+# We're still using Puma 4 to be able to use the daemonized version
+# Source: https://stackoverflow.com/a/67590076/2565681
+# More info: https://github.com/seuros/capistrano-puma
 install_plugin Capistrano::Puma
+install_plugin Capistrano::Puma::Daemon  # If you using puma daemonized (not supported in Puma 5+)
 
 set :rvm_type, :user
 set :rvm_ruby_version, '$RUBY_VERSION'
+
+# If we get an error `rvm stdout: bash: /home/rails/.rvm/bin/rvm: No such file or directory`
+# we need to run:
+# > Then run the following commands on your Production machine in your SSH user's home directory:
+# > mkdir .rvm && mkdir .rvm/bin
+# > ln -s /usr/share/rvm/bin/rvm .rvm/bin/rvm
+#
+# Source: https://www.matthewhoelter.com/2020/11/10/deploying-ruby-on-rails-for-ubuntu-2004.html
 
 # If you are using rbenv add these lines:
 # require 'capistrano/rbenv'
