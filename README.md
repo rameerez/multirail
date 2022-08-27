@@ -58,6 +58,13 @@ Also check you're using a `postgresql` adapter in your `database.yml` (in produc
 
 6. Check `bundler` and the required gems are installed on the Linux server. Run `gem` to check. Run `gem list bundler` to check you have version >2 installed. If not, run `gem install bundler`.
 
+7. Add `x86_64-linux` and `ruby` are added to the local Gemfile.lock, or the deployment script will complain and interrupt in the first deployment
+```
+bundle lock --add-platform x86_64-linux
+bundle lock --add-platform ruby
+```
+Then commit and push
+
 # Usage
 
 On your local development machine clone Multirail to the location you desire with `git clone https://github.com/rameerez/multirail.git && cd multirail`
