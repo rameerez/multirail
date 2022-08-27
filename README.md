@@ -65,6 +65,8 @@ bundle lock --add-platform ruby
 ```
 Then commit and push
 
+8. Make sure you're using `puma ~> 4.0`, this script doesn't work with versions of puma >=5 because we need to run the puma daemon, which is unsopported nowadays in favor of `systemctl` services
+
 # Usage
 
 On your local development machine clone Multirail to the location you desire with `git clone https://github.com/rameerez/multirail.git && cd multirail`
