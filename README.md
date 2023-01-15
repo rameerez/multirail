@@ -61,6 +61,7 @@ Also check you're using a `postgresql` adapter in your `database.yml` (in produc
 7. Add `x86_64-linux` and `ruby` are added to the local Gemfile.lock, or the deployment script will complain and interrupt in the first deployment
 ```
 bundle lock --add-platform x86_64-linux
+bundle lock --add-platform aarch64-linux
 bundle lock --add-platform ruby
 ```
 Then commit and push
