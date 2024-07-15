@@ -26,7 +26,7 @@ On your local development machine clone Multirail to any location with `git clon
 Then just execute this (MAKE SURE you REPLACE your own values!):
 
 ```
-./multirail -d yourdomain.com -i 123.123.123.123 -u rails -g git@github.com:your_github_username/your_rails_repo.git -n your_rails_app_name -f /path/to/your/local/rails/app -v 2.4.0
+./multirail -d yourdomain.com -i 123.123.123.123 -u rails -g git@github.com:your_github_username/your_rails_repo.git -n your_rails_app_name -f /path/to/your/local/rails/app -v 3.1.0
 ```
 
 Where:
