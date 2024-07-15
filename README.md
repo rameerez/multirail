@@ -64,6 +64,8 @@ For more info, execute `./multirail -h`
 
 ---
 
+After this, you need to `ssh` into your server and create your `/home/rails/apps/your_rails_app_name/shared/config/master.key` file with the same contents as the dev file so the Rails secrets file can be decoded in the server.
+
 You're done! Import your PostgreSQL data (if any) and you're ready to go! ✨ Now go to your domain and verify everything is working flawlessly and with a shiny 🔒 SSL cert!
 
 # Known issues
