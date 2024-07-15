@@ -18,6 +18,27 @@ I really really recommend you use the script I provided above. If you'd rather s
 
 Minimum server requirements: 2vCPUs, 4GB RAM. Modern Rails apps might crash with fewer resources, even if small.
 
+# Add a GitHub ssh key to your server
+
+If you're using a private GitHub repo, make your server talk with your Git server via `ssh`:
+
+   - Create a ssh key on your Linux server using the email you use to log in to GitHub.
+
+   `ssh-keygen -t rsa -b 4096 -C "your-github-email@email.com"`
+
+   - Make sure your ssh agent is running
+
+   `eval "$(ssh-agent -s)"`
+
+   - Add your new ssh key (assuming you didn't specify a custom key name, so the key name is the default `id_rsa`)
+
+   `ssh-add ~/.ssh/id_rsa`
+
+   - Show the public key content so you can copy it (again, assuming default key name `id_rsa`):
+
+   `cat ~/.ssh/id_rsa.pub`
+
+   - Go to GitHub.com > Settings > SSH and GPG keys > New SSH key. Add a human-readable title like "Ubuntu production server at 1.2.3.4", paste in your public key you had just copied and hit "Add SSH key"
 
 # Usage
 
@@ -49,9 +70,37 @@ You're done! Import your PostgreSQL data (if any) and you're ready to go! ✨ No
  - App names must NOT contain any non-letter characters or spaces. Name your apps "myapp" (all together, no spaces) instead of "my-app"
  - The `puma` version in the Rails' project Gemfile must be kept at `~> 4.0` because they got rid of the daemon mode on v5 and the new `systemctl` services don't work under our current setup, this is a big TODO for this project
 
+# To-do
+
+- [ ] Don't commit secrets on deploy.rb
+- [ ] Don't create DB role and database if already created (from a failed installation, or from trying to redeploy)
+- [ ] Revert unsuccessfull installations
+- [ ] Completely remove an app from the server
+
 # Troubleshooting
 
-If the database servers is not working:
+## `LOCALE` errors
+If you're getting weird LOCALE errors, you might need to stop accepting remote locale on the server by commenting out the `AcceptEnv LANG LC_*` line in the _remote_ (server) `/etc/ssh/sshd_config` file.
+
+## Server with an ARM architecture
+
+If your server is x86_64 (Intel / AMD), you may want to run:
+```
+bundle lock --add-platform x86_64-linux
+bundle lock --add-platform ruby
+```
+
+If your server is ARM64, you may want to run:
+```
+bundle lock --add-platform aarch64-linux
+bundle lock --add-platform ruby
+```
+
+In any case, make sure your server architecture (like `x86_64-linux`) and `ruby` are added to your local Gemfile.lock, or the deployment script will complain and interrupt in the first deployment.
+
+## Database server not running
+
+If the database server is not working:
 
 `ssh` into the server and check that `puma` is running
 
@@ -67,6 +116,8 @@ rails     4683  0.0 13.0 864652 131388 ?       Sl   May14   5:13 puma 3.12.1 (un
 rails    25487  3.6  9.2 847816 93244 ?        Sl   08:57   0:03 puma 3.12.0 (unix:///home/rails/apps/app2/shared/tmp/sockets/app2-puma.sock)
 rails    25525  0.0  0.1  11464  1152 pts/0    S+   08:58   0:00 grep --color=auto puma
 ```
+
+## Rails app not running
 
 If the required app is not running, check if it has a valid pid (or any at all). `cd` to the app dir (`cd ~/apps/APPNAME`) and `ls` the `pids` folder in search of the `puma.pid`:
 
@@ -89,13 +140,6 @@ bundle exec cap production puma:restart
 ```
 
 if that's not enough.
-
-# To-do
-
-- [ ] Don't create DB role and database if already created (from a failed installation, or from trying to redeploy)
-- [ ] Revert unsuccessfull installations
-- [ ] Completely remove an app from the server
-
 
 # How to uninstall sites
 
