@@ -47,7 +47,7 @@ On your local development machine clone Multirail to any location with `git clon
 Then just execute this (MAKE SURE you REPLACE your own values!):
 
 ```
-./multirail -d yourdomain.com -i 123.123.123.123 -u rails -g git@github.com:your_github_username/your_rails_repo.git -n your_rails_app_name -f /path/to/your/local/rails/app -v 3.1.0
+./multirail -d yourdomain.com -i 123.123.123.123 -u rails -g git@github.com:your_github_username/your_rails_repo.git -n your_rails_app_name -f /path/to/your/local/rails/app -v 3.3.4
 ```
 
 Where:
@@ -58,7 +58,7 @@ Where:
 - `git@github.com:your_github_username/your_rails_repo.git` is the Git SSH URL of your repository from which Capistrano will pull the code.
 - `your_rails_app_name` is just the name of your app (best to name it equal to your repo). [⚠️ IMPORTANT: due to a bug, please don't use any non-letter characters or spaces in the name. Just letters. Or else Postgresql will fail to create the user]
 - `/path/to/your/local/rails/app` is the path on your local machine where the Rails project is.
-- `3.1.0` is the Ruby version both your project and your server are using.
+- `3.3.4` is the Ruby version both your project and your server are using.
 
 For more info, execute `./multirail -h`
 
