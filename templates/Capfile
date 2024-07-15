@@ -17,7 +17,12 @@ require "capistrano/bundler"
 require 'capistrano/rvm'
 require 'capistrano/puma'
 
-# Fix for Capistrano >= 3.15.0 & Puma >= 5.0 
+require "whenever/capistrano"
+
+# Update sitemap https://github.com/kjvarga/sitemap_generator#deployments--capistrano
+require 'capistrano/sitemap_generator'
+
+# Fix for Capistrano >= 3.15.0 & Puma >= 5.0
 # Puma 5 stopped supporting daemonized puma in favor of SystemD
 # We're still using Puma 4 to be able to use the daemonized version
 # Source: https://stackoverflow.com/a/67590076/2565681
