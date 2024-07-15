@@ -12,7 +12,7 @@ You need an already working Rails app, ready to deploy, and using __the same Rub
 
 # Server requirements
 
-> 💡 You can just run [this script](https://gist.github.com/rameerez/4813291ad6e21766e05718a961276341) I created to set up a new Ubuntu Server 22.04 LTS machine and get it ready to accept Rails apps via Capistrano
+> 💡 You can just run [this script](https://gist.github.com/rameerez/4813291ad6e21766e05718a961276341) I created to set up a new Ubuntu Server 22.04 LTS machine and get it ready to accept Rails apps via Capistrano. You may need to run something like this afterwards: [post-setup script](https://gist.github.com/rameerez/a9fa4e78bebe7caf91fced41d781d60f)
 
 I really really recommend you use the script I provided above. If you'd rather set up your own server manually: you need a target production Linux server you can `ssh` into, with a user with `nopasswd` sudo access, and with the following stuff installed: `ruby`, `rvm`, `bundler`, `certbot`, `nginx`, `psql`, `git` (the recommended option is to spin up a that has all this already installed). If you're using private Git repos, make sure your server has access to those via ssh (how-to in the following setup instructions).
 
