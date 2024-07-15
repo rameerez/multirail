@@ -132,13 +132,13 @@ replace_deploy_rb () {
       > $RAILS_PROJECT_PATH/config/deploy.rb
 }
 
-replace_nginx_conf () {
-  echo "Replacing nginx.conf..."
-  sed -e "s/\$APP_NAME/$APP_NAME/g" \
-      -e "s/\$USER_REMOTE_LINUX/$USER_REMOTE_LINUX/g" \
+replace_production_rb () {
+  echo "Replacing production.rb..."
+  sed -e "s/\$IP_ADDRESS/$IP_ADDRESS/g" \
+      -e "s/\$APP_NAME/$APP_NAME/g" \
       -e "s/\$DOMAIN/$DOMAIN/g" \
-      templates/nginx.conf \
-      > $RAILS_PROJECT_PATH/config/nginx.conf
+      templates/production.rb \
+      > $RAILS_PROJECT_PATH/config/deploy/production.rb
 }
 
 commit_and_push_all_changes () {
@@ -160,7 +160,7 @@ then
   add_capistrano_to_project
   replace_capfile
   replace_deploy_rb
-  replace_nginx_conf
+  replace_production_rb
   commit_and_push_all_changes
   initial_capistrano_deployment  
 

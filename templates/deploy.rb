@@ -1,7 +1,7 @@
+# config/deploy.rb
+
 # config valid for current version and patch releases of Capistrano
 lock "~> 3.18.0"
-# # Change these
-# server '$IP_ADDRESS', roles: [:web, :app, :db], primary: true
 
 set :repo_url,        "$GIT_REPO_URL_SSH"
 set :application,     '$APP_NAME'
