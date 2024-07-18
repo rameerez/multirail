@@ -4,10 +4,9 @@
 lock "~> 3.18.0"
 
 set :repo_url,        "$GIT_REPO_URL_SSH"
+
 set :application,     '$APP_NAME'
 set :user,            '$USER_REMOTE_LINUX'
-# set :puma_threads,    [4, 16]
-# set :puma_workers,    0
 
 
 # Don't change these unless you know what you're doing
@@ -80,39 +79,60 @@ namespace :deploy do
     end
   end
 
-  desc 'Initial Deploy'
-  task :initial do
+  desc 'Print summary of deployment ahead'
+  task :print_summary_before_deployment do
     on roles(:app) do
-      # TODO: figure out how to escape $APP_NAME using double quotes because this breaks if $APP_NAME contains hyphens like my-app
-      execute 'sudo -u postgres bash -c "psql -c \"CREATE USER $APP_NAME WITH PASSWORD \'$RANDOM_DATABASE_PASSWORD\';\""'
-      execute "sudo -u postgres psql -c 'create database $APP_NAME_production;'"
-      execute "sudo -u postgres psql -c 'grant all privileges on database $APP_NAME_production to $APP_NAME;'"
-      execute "sudo -u postgres psql -c 'ALTER DATABASE $APP_NAME_production OWNER TO $APP_NAME;'"
+      execute "echo 'STARTING DEPLOYMENT'"
+      execute "echo 'App name: #{fetch(:application)}'"
+      execute "echo 'Stage: #{fetch(:stage)}'"
+      execute "echo 'Domain: #{fetch(:domain_name)}'"
+      execute "echo 'Branch: #{fetch(:branch)}'"
+      execute "echo 'DB endpoint: #{fetch(:default_env)['DB_HOST']}'"
+    end
+  end
 
+  desc 'Sets up the Postgres DB. If it already exists, it resets the password to a new one without losing data.'
+  task :setup_db do
+    on roles(:app) do
+      database_secret = SecureRandom.hex(32)
+
+      # Check if the database user already exists
+      user_exists = test("sudo -u postgres psql -tAc \"SELECT 1 FROM pg_roles WHERE rolname='#{fetch(:application)}'\" | grep -q 1")
+
+      if user_exists
+        # Update the user's password if it already exists
+        execute "sudo -u postgres psql -c \"ALTER USER #{fetch(:application)} WITH PASSWORD '#{database_secret}';\""
+      else
+        # Create the user if it doesn't exist
+        execute "sudo -u postgres psql -c \"CREATE USER #{fetch(:application)} WITH PASSWORD '#{database_secret}';\""
+      end
+
+      # Check if the database already exists
+      db_exists = test("sudo -u postgres psql -lqt | cut -d \\| -f 1 | grep -qw #{fetch(:application)}_#{fetch(:stage).to_s}")
+
+      unless db_exists
+        # Create the database if it doesn't exist
+        execute "sudo -u postgres psql -c 'CREATE DATABASE #{fetch(:application)}_#{fetch(:stage).to_s};'"
+        execute "sudo -u postgres psql -c 'GRANT ALL PRIVILEGES ON DATABASE #{fetch(:application)}_#{fetch(:stage).to_s} TO #{fetch(:application)};'"
+        execute "sudo -u postgres psql -c 'ALTER DATABASE #{fetch(:application)}_#{fetch(:stage).to_s} OWNER TO #{fetch(:application)};'"
+      end
+
+      # Ensure the config directory exists
       execute "mkdir -p /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config"
-      execute "touch /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/secrets.yml"
 
-secrets_content = %x(
-base64 <<TEST
-production:
-  secret_key_base: $RAKE_SECRET
-TEST
-).delete("\n")
-      execute "echo '#{secrets_content}' | base64 -d | cat - >> /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/secrets.yml"
-
-      execute "touch /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
-
-database_config = %x(
-base64 <<TEST
-production:
+      # Create or update the database.yml file
+      database_config = %x(
+base64 <<DATABASE
+#{fetch(:stage).to_s}:
   adapter: postgresql
   host: localhost
-  database: $APP_NAME_production
-  username: $APP_NAME
-  password: $RANDOM_DATABASE_PASSWORD
-TEST
+  database: #{fetch(:application)}_#{fetch(:stage).to_s}
+  username: #{fetch(:application)}
+  password: #{database_secret}
+DATABASE
 ).delete("\n")
-      execute "echo '#{database_config}' | base64 -d | cat - >> /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
+
+      execute "echo '#{database_config}' | base64 -d > /home/#{fetch(:user)}/apps/#{fetch(:application)}/shared/config/database.yml"
 
       before 'deploy:restart', 'puma:start'
       invoke 'deploy'
@@ -125,6 +145,13 @@ TEST
       nginx_config = <<-EOS
 upstream puma_#{fetch(:application)} {
   server unix://#{fetch(:deploy_to)}/shared/tmp/sockets/#{fetch(:application)}-puma.sock;
+}
+
+# Redirect www to non-www
+server {
+  listen 80;
+  server_name www.#{fetch(:domain_name)};
+  return 301 $scheme://#{fetch(:domain_name)}$request_uri;
 }
 
 # Actual site server block
@@ -193,10 +220,14 @@ EOS
     end
   end
 
-  desc 'Create SSL cert'
+  desc 'Create or expand SSL certs for domain_name and www.domain_name'
   task :create_ssl_cert do
-    on roles(:app), wait: 15 do
-      execute "[ ! -f /etc/letsencrypt/live/$DOMAIN ] && sudo certbot --nginx --agree-tos --redirect --hsts -n -m admin@$DOMAIN -d $DOMAIN && sudo service nginx restart"
+    on roles(:app) do
+      domains = "-d #{fetch(:domain_name)} -d www.#{fetch(:domain_name)}"
+
+      execute :sudo, "certbot --nginx --agree-tos --redirect --hsts -n --expand -m admin@#{fetch(:domain_name)} #{domains}"
+
+      execute :sudo, "service nginx restart"
     end
   end
 
@@ -320,19 +351,10 @@ EOS
     end
   end
 
-  desc 'Print summary of deployment ahead'
-  task :print_summary_before_deployment do
-    on roles(:app) do
-      execute "echo 'STARTING DEPLOYMENT'"
-      execute "echo 'Stage: #{fetch(:stage)}'"
-      execute "echo 'Domain: #{fetch(:domain_name)}'"
-      execute "echo 'Branch: #{fetch(:branch)}'"
-      execute "echo 'DB endpoint: #{fetch(:default_env)['DB_HOST']}'"
-    end
-  end
 
-  before :starting,     :print_summary_before_deployment
   before :starting,     :check_revision
+  before :starting,     :print_summary_before_deployment
+
   # after  :finishing,    :compile_assets
   after  :finishing,    :cleanup
   after  :finishing,    :symlink_nginx_conf
@@ -347,7 +369,7 @@ end
 # kill -s SIGTERM pid   # Stop puma
 
 
-append :linked_files, "config/database.yml", "config/secrets.yml"
+append :linked_files, "config/database.yml"
 # https://stackoverflow.com/questions/50963676/rails-5-2-with-master-key-digital-ocean-deployment-activesupportmessageencryp
 append :linked_files, "config/master.key"
 append :linked_dirs, "log", "tmp/pids", "tmp/cache", "tmp/sockets", "vendor/bundle", "public/system", "public/uploads"
