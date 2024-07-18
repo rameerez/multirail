@@ -15,8 +15,6 @@
 RAILS_PROJECT_PATH="./"
 RAILS_PROJECT_RUBY_VERSION="3.2.3"
 
-RAKE_SECRET="none"
-
 program_name=$0
 
 function usage {
@@ -118,15 +116,11 @@ replace_capfile () {
 }
 
 replace_deploy_rb () {
-  RANDOM_DATABASE_PASSWORD=`openssl rand -hex 32;echo;`
-  RAKE_SECRET="$(cd $RAILS_PROJECT_PATH && rake secret)"
   echo "Replacing deploy.rb..."
   sed -e "s/\$IP_ADDRESS/$IP_ADDRESS/g" \
       -e "s~\$GIT_REPO_URL_SSH~$GIT_REPO_URL_SSH~" \
       -e "s/\$APP_NAME/$APP_NAME/g" \
       -e "s/\$USER_REMOTE_LINUX/$USER_REMOTE_LINUX/g" \
-      -e "s/\$RANDOM_DATABASE_PASSWORD/$RANDOM_DATABASE_PASSWORD/g" \
-      -e "s/\$RAKE_SECRET/$RAKE_SECRET/g" \
       -e "s/\$DOMAIN/$DOMAIN/g" \
       templates/deploy.rb \
       > $RAILS_PROJECT_PATH/config/deploy.rb

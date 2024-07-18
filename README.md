@@ -4,7 +4,7 @@
 
 [Stop paying hundreds of dollars to AWS](https://x.com/rameerez/status/1811782548353351898), Heroku and similar services! Host multiple Rails apps in a single VPS Ubuntu server with a single command.
 
-> ⚠️ WARNING: This is a prototype – I created it to deploy my own Rails projects. It is NOT production ready. It writes hardcoded DB creds to the Capistrano deploy.rb file. Make sure to add `/config/deploy.rb` to your `.gitignore` so you don't commit production secrets to your git repo
+> ⚠️ WARNING: This is a prototype – I created it to deploy my own Rails projects. It may NOT be production ready.
 
 # Pre-requisites
 
@@ -64,6 +64,7 @@ For more info, execute `./multirail -h`
 
 ---
 
+*🚨 Important*
 After this, you need to `ssh` into your server and create your `/home/rails/apps/your_rails_app_name/shared/config/master.key` file with the same contents as the dev file so the Rails secrets file can be decoded in the server.
 
 You're done! Import your PostgreSQL data (if any) and you're ready to go! ✨ Now go to your domain and verify everything is working flawlessly and with a shiny 🔒 SSL cert!
@@ -74,8 +75,6 @@ You're done! Import your PostgreSQL data (if any) and you're ready to go! ✨ No
 
 # To-do
 
-- [ ] Don't commit secrets on deploy.rb
-- [ ] Don't create DB role and database if already created (from a failed installation, or from trying to redeploy)
 - [ ] Revert unsuccessfull installations
 - [ ] Completely remove an app from the server
 
