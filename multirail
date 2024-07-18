@@ -13,7 +13,7 @@
 #   sudo certbot delete
 
 RAILS_PROJECT_PATH="./"
-RAILS_PROJECT_RUBY_VERSION="2.4.0"
+RAILS_PROJECT_RUBY_VERSION="3.2.3"
 
 RAKE_SECRET="none"
 
@@ -27,7 +27,7 @@ function usage {
     echo "  -g git          Git repository SSH url on which the project is hosted (ex: git@github.com:user/project.git)"
     echo "  -n name         Name of your app (ex: my-awesome-project)"
     echo "  [-f folder]     Set the path where the Rails project is located. Defaults to current directory (ex: ~/git/my-project)"
-    echo "  [-v version]    Set the target Ruby version for the project. Defaults to 2.4.0 (ex: 2.5.1)"
+    echo "  [-v version]    Set the target Ruby version for the project. Defaults to 3.2.3"
     echo "  -h              Display this help message"
     exit 1
 }
